@@ -65,13 +65,16 @@ task buildImage(type: DockerBuildImage) {
 	tags.add("aukhatov/srping-boot-auth-server:${project.version}")
 }
 
-task pushImage(type: DockerPushImage) {
-	dependsOn   buildImage
-	imageName = "aukhatov/srping-boot-auth-server"
-	tag = project.version
+docker {
 	registryCredentials {
 		url = 'https://index.docker.io/v1/'
 		username = System.getenv('DOCKER_USER')
 		password = System.getenv('DOCKER_PASSWORD')
 	}
+}
+
+task pushImage(type: DockerPushImage) {
+	dependsOn   buildImage
+	imageName = "aukhatov/srping-boot-auth-server"
+	tag = project.version
 }
