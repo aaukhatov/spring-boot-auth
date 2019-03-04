@@ -1,0 +1,65 @@
+buildscript {
+	ext {
+		springBootVersion = '2.0.6.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+		jcenter()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+		classpath 'com.bmuschko:gradle-docker-plugin:4.4.1'
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'com.bmuschko.docker-remote-api'
+
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+
+project.version = "0.1.0"
+
+bootJar {
+	baseName = 'auth-server'
+	version =  '0.1.0'
+}
+
+repositories {
+	mavenCentral()
+	jcenter()
+}
+
+dependencies {
+	implementation('org.springframework.boot:spring-boot-starter-security')
+	implementation('org.springframework.boot:spring-boot-starter-web')
+	compile('org.springframework.security.oauth:spring-security-oauth2:2.3.4.RELEASE')
+	compile('org.springframework.security:spring-security-jwt:1.0.9.RELEASE')
+	compile('io.springfox:springfox-swagger2:2.7.0')
+	compile('io.springfox:springfox-swagger-ui:2.7.0')
+	testImplementation('org.springframework.boot:spring-boot-starter-test')
+	testImplementation('org.springframework.security:spring-security-test')
+}
+
+task copyJar(type: Copy) {
+	dependsOn   bootJar
+	from        "build/libs/${jar.baseName}-${project.version}.jar"
+	into        "${project.buildDir}/docker"
+}
+
+task copyDockerfile(type: Copy) {
+	dependsOn   copyJar
+	from        "${project.projectDir}/src/main/docker/Dockerfile"
+	into        "${project.buildDir}/docker"
+}
+
+task buildImage(type: DockerBuildImage) {
+	dependsOn   copyDockerfile
+	inputDir = project.file("${project.buildDir}/docker")
+	dockerFile = project.file("${project.buildDir}/docker/Dockerfile")
+	files project.file("${project.buildDir}/docker")
+	buildArgs = ['JAR_FILE' : "${jar.baseName}-${project.version}.jar"]
+	tags.add("aukhatov/srping-boot-auth-server:${project.version}")
+}
