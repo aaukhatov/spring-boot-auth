@@ -1,5 +1,4 @@
-# Spring Boot Auth Server
-
+# Spring Boot Auth Server [![Build Status](https://travis-ci.org/aukhatov/spring-boot-auth.svg?branch=master)](https://travis-ci.org/aukhatov/spring-boot-auth)
 ## Build Jar
 
 ```shell
