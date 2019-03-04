@@ -19,6 +19,7 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'com.bmuschko.docker-remote-api'
 
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 
 project.version = "0.1.0"
 
@@ -62,4 +63,10 @@ task buildImage(type: DockerBuildImage) {
 	files project.file("${project.buildDir}/docker")
 	buildArgs = ['JAR_FILE' : "${jar.baseName}-${project.version}.jar"]
 	tags.add("aukhatov/srping-boot-auth-server:${project.version}")
+}
+
+task pushImage(type: DockerPushImage) {
+	dependsOn   buildImage
+	imageName = "aukhatov/srping-boot-auth-server"
+	tag = project.version
 }
