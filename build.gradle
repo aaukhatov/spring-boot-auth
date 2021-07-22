@@ -4,10 +4,11 @@ buildscript {
 	}
 	repositories {
 		mavenCentral()
+		gradlePluginPortal()
 	}
 	dependencies {
 		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-//		classpath 'com.bmuschko:gradle-docker-plugin:4.4.1'
+		classpath 'com.bmuschko:gradle-docker-plugin:6.7.0'
 	}
 }
 
@@ -15,10 +16,10 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
-//apply plugin: 'com.bmuschko.docker-remote-api'
+apply plugin: 'com.bmuschko.docker-remote-api'
 
-//import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
-//import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 
 project.version = "0.1.0"
 sourceCompatibility = '11'
@@ -48,37 +49,37 @@ dependencies {
 	testImplementation('org.springframework.security:spring-security-test')
 }
 
-//task copyJar(type: Copy) {
-//	dependsOn   bootJar
-//	from        "build/libs/${jar.baseName}-${project.version}.jar"
-//	into        "${project.buildDir}/docker"
-//}
+task copyJar(type: Copy) {
+	dependsOn   bootJar
+	from        "build/libs/${jar.baseName}-${project.version}.jar"
+	into        "${project.buildDir}/docker"
+}
 
-//task copyDockerfile(type: Copy) {
-//	dependsOn   copyJar
-//	from        "${project.projectDir}/src/main/docker/Dockerfile"
-//	into        "${project.buildDir}/docker"
-//}
-//
-//task buildImage(type: DockerBuildImage) {
-//	dependsOn   copyDockerfile
-//	inputDir = project.file("${project.buildDir}/docker")
-//	dockerFile = project.file("${project.buildDir}/docker/Dockerfile")
-//	files project.file("${project.buildDir}/docker")
-//	buildArgs = ['JAR_FILE' : "${jar.baseName}-${project.version}.jar"]
-//	tags.add("aukhatov/srping-boot-auth-server:${project.version}")
-//}
-//
-//docker {
-//	registryCredentials {
-//		url = 'https://index.docker.io/v1/'
-//		username = System.getenv('DOCKER_USER')
-//		password = System.getenv('DOCKER_PASSWORD')
-//	}
-//}
-//
-//task pushImage(type: DockerPushImage) {
-//	dependsOn   buildImage
-//	imageName = "aukhatov/srping-boot-auth-server"
-//	tag = project.version
-//}
+task copyDockerfile(type: Copy) {
+	dependsOn   copyJar
+	from        "${project.projectDir}/src/main/docker/Dockerfile"
+	into        "${project.buildDir}/docker"
+}
+
+task buildImage(type: DockerBuildImage) {
+	dependsOn   copyDockerfile
+	inputDir = project.file("${project.buildDir}/docker")
+	dockerFile = project.file("${project.buildDir}/docker/Dockerfile")
+	files project.file("${project.buildDir}/docker")
+	buildArgs = ['JAR_FILE' : "${jar.baseName}-${project.version}.jar"]
+	images.add("aukhatov/srping-boot-auth-server:${project.version}")
+}
+
+docker {
+	registryCredentials {
+		url = 'https://index.docker.io/v1/'
+		username = System.getenv('DOCKER_USER')
+		password = System.getenv('DOCKER_PASSWORD')
+	}
+}
+
+task pushImage(type: DockerPushImage) {
+	dependsOn   buildImage
+	imageName = "aukhatov/srping-boot-auth-server"
+	tag = project.version
+}
